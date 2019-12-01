@@ -1,0 +1,22 @@
+
+
+BoxLayout:
+    orientation: "vertical"
+    Button:
+        text: "getCameraIdList"
+        on_release: print(app.get_camera_id_list())
+    Button:
+        text: "print characteristics"
+        on_release: app.print_camera_info()
+    Button:
+        text: "open camera 0"
+        on_release: app.open_camera(0)
+    Button:
+        text: "create preview stream"
+        on_release: app.create_preview_stream()
+    Widget:
+        canvas:
+            Rectangle:
+                pos: self.pos
+                size: self.size
+                texture: app.texture
