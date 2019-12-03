@@ -1,22 +1,52 @@
 
+<CameraDisplayWidget>:
+    canvas:
+        Color:
+            rgba: 1, 1, 1, 1
+        Rectangle:
+            pos: self._rect_pos
+            size: self._rect_size
+            texture: self.texture
+            tex_coords: root.tex_coords
+    on_texture: print("CDW on_texture")
+    on_resolution: print("CDW on_resolution", self.resolution)
+    on_touch_down: self.correct_camera = not self.correct_camera
 
-BoxLayout:
+
+FloatLayout:
     orientation: "vertical"
-    Button:
-        text: "getCameraIdList"
-        on_release: print(app.get_camera_id_list())
-    Button:
-        text: "print characteristics"
-        on_release: app.print_camera_info()
-    Button:
-        text: "open camera 0"
-        on_release: app.open_camera(0)
-    Button:
-        text: "create preview stream"
-        on_release: app.create_preview_stream()
-    Widget:
+    CameraDisplayWidget:
+        id: cdw
+        texture: app.texture
+        resolution: app.camera_resolution
+    BoxLayout:
+        pos_hint: {'top': 1.}
+        size_hint: 1, None
+        height: dp(40)
+        orientation: "horizontal"
         canvas:
+            Color:
+                rgba: 0.4, 0.4, 0.4, 0.4
             Rectangle:
                 pos: self.pos
                 size: self.size
-                texture: app.texture
+        Widget:
+        Button:
+            text: "open stream 0"
+            on_release: app.stream_camera_index(0)
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+
+        Button:
+            text: "open stream 1"
+            on_release: app.stream_camera_index(1)
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+
+        Button:
+            text: "next camera"
+            on_release: app.rotate_cameras()
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+
+        Widget:
