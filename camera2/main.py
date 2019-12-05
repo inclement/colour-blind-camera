@@ -1,4 +1,7 @@
 
+import time
+import logging
+
 from kivy.app import App
 from kivy import platform
 from kivy.lang import Builder
@@ -10,9 +13,7 @@ from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.uix.stencilview import StencilView
 
-import time
-
-import logging
+from colourswidget import ColourShaderWidget
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)

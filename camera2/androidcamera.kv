@@ -8,17 +8,16 @@
             size: self._rect_size
             texture: self.texture
             tex_coords: root.tex_coords
-    on_texture: print("CDW on_texture")
-    on_resolution: print("CDW on_resolution", self.resolution)
-    on_touch_down: self.correct_camera = not self.correct_camera
 
 
 FloatLayout:
     orientation: "vertical"
-    CameraDisplayWidget:
-        id: cdw
-        texture: app.texture
-        resolution: app.camera_resolution
+    ColourShaderWidget:
+        id: shader_widget
+        CameraDisplayWidget:
+            id: cdw
+            texture: app.texture
+            resolution: app.camera_resolution
     BoxLayout:
         pos_hint: {'top': 1.}
         size_hint: 1, None
@@ -31,21 +30,54 @@ FloatLayout:
                 pos: self.pos
                 size: self.size
         Widget:
-        Button:
-            text: "open stream 0"
-            on_release: app.stream_camera_index(0)
-            size_hint_x: None
-            width: self.texture_size[0] + dp(20)
+        # Button:
+        #     text: "open stream 0"
+        #     on_release: app.stream_camera_index(0)
+        #     size_hint_x: None
+        #     width: self.texture_size[0] + dp(20)
 
-        Button:
-            text: "open stream 1"
-            on_release: app.stream_camera_index(1)
-            size_hint_x: None
-            width: self.texture_size[0] + dp(20)
+        # Button:
+        #     text: "open stream 1"
+        #     on_release: app.stream_camera_index(1)
+        #     size_hint_x: None
+        #     width: self.texture_size[0] + dp(20)
 
         Button:
             text: "next camera"
             on_release: app.rotate_cameras()
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+
+        ToggleButton:
+            text: 'trichromacy'
+            id: normal_button
+            on_press: shader_widget.transformation = 'none'
+            group: 'transformations'
+            state: 'down'
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+        ToggleButton:
+            text: 'protanopia'
+            on_press: shader_widget.transformation = ('protanopia' if self.state == 'down' else 'none')
+            group: 'transformations'
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+        ToggleButton:
+            text: 'deuteranopia'
+            on_press: shader_widget.transformation = ('deuteranopia' if self.state == 'down' else 'none')
+            group: 'transformations'
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+        ToggleButton:
+            text: 'tritanopia'
+            on_press: shader_widget.transformation = ('tritanopia' if self.state == 'down' else 'none')
+            group: 'transformations'
+            size_hint_x: None
+            width: self.texture_size[0] + dp(20)
+        ToggleButton:
+            text: 'chromaticity'
+            on_press: shader_widget.transformation = ('chromaticity' if self.state == 'down' else 'none')
+            group: 'transformations'
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
 
