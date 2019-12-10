@@ -10,7 +10,7 @@
             tex_coords: root.tex_coords
 
 
-FloatLayout:
+<RootLayout>:
     orientation: "vertical"
     ColourShaderWidget:
         id: shader_widget
@@ -19,9 +19,11 @@ FloatLayout:
             texture: app.texture
             resolution: app.camera_resolution
     BoxLayout:
-        pos_hint: {'top': 1.}
+        id: buttons_dropdown
+        pos_hint: {}
         size_hint: 1, None
         height: dp(40)
+        pos: root.x, root.top - self.height + (1. - root._buttons_visible_fraction) * self.height
         orientation: "horizontal"
         canvas:
             Color:
@@ -30,18 +32,6 @@ FloatLayout:
                 pos: self.pos
                 size: self.size
         Widget:
-        # Button:
-        #     text: "open stream 0"
-        #     on_release: app.stream_camera_index(0)
-        #     size_hint_x: None
-        #     width: self.texture_size[0] + dp(20)
-
-        # Button:
-        #     text: "open stream 1"
-        #     on_release: app.stream_camera_index(1)
-        #     size_hint_x: None
-        #     width: self.texture_size[0] + dp(20)
-
         Button:
             text: "next camera"
             on_release: app.rotate_cameras()
@@ -80,5 +70,4 @@ FloatLayout:
             group: 'transformations'
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
-
         Widget:

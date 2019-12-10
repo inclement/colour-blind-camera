@@ -4,7 +4,7 @@ from setuptools import find_packages
 
 options = {'apk': {'debug': None,
                    'requirements': 'sdl2,pyjnius,kivy,python3',
-                   'android-api': 27,
+                   'android-api': 29,
                    'ndk-api': 21,
                    'ndk-dir': '/home/sandy/android/android-ndk-r20',
                    'sdk-dir': '/home/sandy/android/android-sdk',

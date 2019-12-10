@@ -3,15 +3,18 @@ import time
 import logging
 
 from kivy.app import App
+from kivy.animation import Animation
 from kivy import platform
 from kivy.lang import Builder
 from kivy.event import EventDispatcher
-from kivy.properties import (ObjectProperty, StringProperty, ListProperty, BooleanProperty)
+from kivy.properties import (
+    ObjectProperty, StringProperty, ListProperty, BooleanProperty, NumericProperty)
 from kivy.graphics.texture import Texture
 from kivy.graphics import Fbo, Callback, Rectangle
 from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.uix.stencilview import StencilView
+from kivy.uix.floatlayout import FloatLayout
 
 from colourswidget import ColourShaderWidget
 
@@ -23,6 +26,32 @@ logger.addHandler(handler)
 
 if platform == "android":
     from camera2 import PyCameraInterface
+
+class RootLayout(FloatLayout):
+    buttons_visible = BooleanProperty(True)
+
+    _buttons_visible_fraction = NumericProperty(1.0)
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.anim_to_1 = Animation(_buttons_visible_fraction=1.0, duration=0.5)
+        self.anim_to_0 = Animation(_buttons_visible_fraction=0.0, duration=0.5)
+
+    def on_touch_down(self, touch):
+        if self.ids.buttons_dropdown.collide_point(*touch.pos):
+            return self.ids.buttons_dropdown.on_touch_down(touch)
+
+        touch.ud["toggle_buttons"] = True
+
+    def on_touch_up(self, touch):
+        if touch.ud.get("toggle_buttons", False):
+            self.buttons_visible = not self.buttons_visible
+        return super().on_touch_up(touch)
+
+    def on_buttons_visible(self, instance, value):
+        Animation.cancel_all(self, "_buttons_visible_fraction")
+        Animation(_buttons_visible_fraction=value, duration=0.55, t="out_cubic").start(self)
 
 class CameraDisplayWidget(StencilView):
     texture = ObjectProperty(None, allownone=True)
@@ -105,7 +134,9 @@ class CameraApp(App):
     cameras_to_use = ListProperty()
 
     def build(self):
-        root = Builder.load_file("androidcamera.kv")
+        Builder.load_file("androidcamera.kv")
+
+        root = RootLayout()
 
         self.camera_interface = PyCameraInterface()
 
