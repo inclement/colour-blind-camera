@@ -32,7 +32,9 @@
                 pos: self.pos
                 size: self.size
         ColouredButton:
-            text: "next camera"
+            text: "P R"
+            font_size: 0.5 * self.height
+            font_name: "fontello.ttf"
             on_release: app.rotate_cameras()
         ColourBlindnessSelectionButton:
             text: 'trichromacy'
@@ -65,7 +67,9 @@
             width: deuteranopia_button.width
             has_blue: False
         ColouredButton:
-            text: "hide"
+            text: "U"
+            font_size: 0.4 * self.height
+            font_name: "fontello.ttf"
             on_release: root.hide_buttons()
     OpenCameraButton:
 

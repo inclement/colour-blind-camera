@@ -31,6 +31,6 @@ setup(
     packages=find_packages(),
     options=options,
     package_data={
-        'camera2': ['*.py', '*.png', '*.kv']
+        'camera2': ['*.py', '*.png', '*.kv', '*.ttf']
     }
 )
