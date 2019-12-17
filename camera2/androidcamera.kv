@@ -1,4 +1,4 @@
-
+#:import style style
 <CameraDisplayWidget>:
     canvas:
         Color:
@@ -22,7 +22,7 @@
         id: buttons_dropdown
         pos_hint: {}
         size_hint: 1, None
-        height: dp(40)
+        height: dp(50)
         pos: root.x, root.top - self.height + (1. - root._buttons_visible_fraction) * self.height
         orientation: "horizontal"
         canvas:
@@ -31,14 +31,15 @@
             Rectangle:
                 pos: self.pos
                 size: self.size
-        Widget:
-        Button:
+        ColouredButton:
+            text: "hide"
+            on_release: root.hide_buttons()
+        ColouredButton:
             text: "next camera"
             on_release: app.rotate_cameras()
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
-
-        ToggleButton:
+        ColourBlindnessSelectionButton:
             text: 'trichromacy'
             id: normal_button
             on_press: shader_widget.transformation = 'none'
@@ -46,28 +47,156 @@
             state: 'down'
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
-        ToggleButton:
+        ColourBlindnessSelectionButton:
             text: 'protanopia'
             on_press: shader_widget.transformation = ('protanopia' if self.state == 'down' else 'none')
             group: 'transformations'
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
-        ToggleButton:
+            has_red: False
+        ColourBlindnessSelectionButton:
             text: 'deuteranopia'
             on_press: shader_widget.transformation = ('deuteranopia' if self.state == 'down' else 'none')
             group: 'transformations'
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
-        ToggleButton:
+            has_green: False
+        ColourBlindnessSelectionButton:
             text: 'tritanopia'
             on_press: shader_widget.transformation = ('tritanopia' if self.state == 'down' else 'none')
             group: 'transformations'
             size_hint_x: None
             width: self.texture_size[0] + dp(20)
-        ToggleButton:
-            text: 'chromaticity'
-            on_press: shader_widget.transformation = ('chromaticity' if self.state == 'down' else 'none')
-            group: 'transformations'
-            size_hint_x: None
-            width: self.texture_size[0] + dp(20)
+            has_blue: False
+        ColouredButton:
+            text: "hide"
+            on_release: root.hide_buttons()
+
+<ColouredButton>:
+    background_normal: style.button_normal_rgba
+    background_down: style.button_down_rgba
+    radius: dp(5)
+    color: (1, 1, 1, 1)
+    canvas.before:
+        Color:
+            rgba: self.background_normal if self.state == 'normal' else self.background_down
+        RoundedRectangle:
+            pos: self.x + self.padding, self.y + self.padding
+            size: self.width - 2*self.padding, self.height - 2*self.padding
+            radius: [(self.radius, self.radius) for _ in range(4)]
+
+<ColouredToggleButton>:
+    background_normal: style.button_normal_rgba
+    background_down: style.button_down_rgba
+    radius: dp(5)
+    color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: self.background_normal if self.state == 'normal' else self.background_down
+        RoundedRectangle:
+            pos: self.x + self.padding, self.y + self.padding
+            size: self.width - 2*self.padding, self.height - 2*self.padding
+            radius: [(self.radius, self.radius) for _ in range(4)]
+
+<ColouredButtonContainer>:
+    background_normal: style.button_normal_rgba
+    background_down: style.button_down_rgba
+    radius: dp(5)
+    color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: self.background_normal if self.state == 'normal' else self.background_down
+        RoundedRectangle:
+            pos: self.x + self.coloured_button_padding, self.y + self.coloured_button_padding
+            size: self.width - 2*self.coloured_button_padding, self.height - 2*self.coloured_button_padding
+            radius: [(self.radius, self.radius) for _ in range(4)]
+
+<ColouredToggleButtonContainer>:
+    background_normal: style.button_normal_rgba
+    background_down: style.button_down_rgba
+    radius: dp(5)
+    color: 1, 1, 1, 1
+    canvas.before:
+        Color:
+            rgba: self.background_normal if self.state == 'normal' else self.background_down
+        RoundedRectangle:
+            pos: self.x + self.coloured_button_padding, self.y + self.coloured_button_padding
+            size: self.width - 2*self.coloured_button_padding, self.height - 2*self.coloured_button_padding
+            radius: [(self.radius, self.radius) for _ in range(4)]
+
+<ButtonCheckbox>:
+    on_release: self.active = not self.active
+    font_name: 'assets/fontello.ttf'
+    text: 't'
+    # color: (1, 1, 1, 1) if self.active else (0, 0, 0, 0)
+    color: self.text_colour[:3] + [self.text_colour[3] if self.active else 0]
+    font_size: dp(20)
+    box_size: dp(22)
+    canvas:
+        Color:
+            rgba: self.draw_colour[:3] + [self.draw_colour[3] if self.state == 'down' else 0]
+        Rectangle:
+            pos: self.center_x - 0.5*self.box_size, self.center_y - 0.5*self.box_size
+            size: self.box_size, self.box_size
+        Color:
+            rgba: self.draw_colour
+        Line:
+            rectangle: self.center_x - 0.5*self.box_size, self.center_y - 0.5*self.box_size, self.box_size, self.box_size
+            width: 1.1
+
+<ColourBlindnessSelectionButton>:
+    texture_size: label.texture_size
+    canvas.before:
+        Color:
+            rgba: 1, 1, 1, 1
+        StencilPush:
+        RoundedRectangle:
+            pos: self.x + self.coloured_button_padding, self.y + self.coloured_button_padding
+            size: self.width - 2*self.coloured_button_padding, self.height - 2*self.coloured_button_padding
+            radius: [(self.radius, self.radius) for _ in range(4)]
+        StencilUse:
+    canvas.after:
+        Color:
+            rgba: (0, 0, 0, 1) if self.state == "down" else (0, 0, 0, 0)
+        Line:
+            rounded_rectangle: self.x + self.coloured_button_padding, self.y + self.coloured_button_padding, self.width - 2*self.coloured_button_padding, self.height - 2*self.coloured_button_padding, style.button_radius
+            width: dp(2)
+        Color:
+            rgba: 1, 1, 1, 1
+        StencilUnUse:
+        RoundedRectangle:
+            pos: self.x + self.coloured_button_padding, self.y + self.coloured_button_padding
+            size: self.width - 2*self.coloured_button_padding, self.height - 2*self.coloured_button_padding
+            radius: [(self.radius, self.radius) for _ in range(4)]
+        StencilPop:
+
+    BoxLayout:
+        orientation: "vertical"
+        size_hint: 1.0, 1.0
+        Label:
+            id: label
+            text: root.text
         Widget:
+            size_hint_y: None
+            height: dp(15)
+            canvas:
+                Color:
+                    rgba: (1, 0.36, 0.36, 1) if root.has_red else (1, 1, 1, 0)
+                Rectangle:
+                    pos: self.pos
+                    size: self.width / 3., self.height
+                Color:
+                    rgba: (0.3, 1, 0.3, 1) if root.has_green else (1, 1, 1, 0)
+                Rectangle:
+                    pos: self.x + self.width / 3., self.y
+                    size: self.width / 3., self.height
+                Color:
+                    rgba: (0.35, 0.45, 1, 1) if root.has_blue else (1, 1, 1, 0)
+                Rectangle:
+                    pos: self.x + 2*self.width / 3., self.y
+                    size: self.width / 3., self.height
+                Color:
+                    rgba: 0.9, 0.9, 0.9, 1
+                Line:
+                    points: [self.x, self.top, self.right, self.top]
+                    width: 1

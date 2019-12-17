@@ -17,6 +17,7 @@ from kivy.uix.stencilview import StencilView
 from kivy.uix.floatlayout import FloatLayout
 
 from colourswidget import ColourShaderWidget
+from widgets import ColouredToggleButtonContainer
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -26,6 +27,13 @@ logger.addHandler(handler)
 
 if platform == "android":
     from camera2 import PyCameraInterface
+
+class ColourBlindnessSelectionButton(ColouredToggleButtonContainer):
+    has_red = BooleanProperty(True)
+    has_green = BooleanProperty(True)
+    has_blue = BooleanProperty(True)
+    text = StringProperty()
+    texture_size = ListProperty([0, 0])
 
 class RootLayout(FloatLayout):
     buttons_visible = BooleanProperty(True)
@@ -38,15 +46,21 @@ class RootLayout(FloatLayout):
         self.anim_to_1 = Animation(_buttons_visible_fraction=1.0, duration=0.5)
         self.anim_to_0 = Animation(_buttons_visible_fraction=0.0, duration=0.5)
 
+    def hide_buttons(self):
+        self.buttons_visible = False
+
+    def show_buttons(self):
+        self.buttons_visible = True
+
     def on_touch_down(self, touch):
         if self.ids.buttons_dropdown.collide_point(*touch.pos):
             return self.ids.buttons_dropdown.on_touch_down(touch)
 
-        touch.ud["toggle_buttons"] = True
+        touch.ud["show_buttons"] = True
 
     def on_touch_up(self, touch):
-        if touch.ud.get("toggle_buttons", False):
-            self.buttons_visible = not self.buttons_visible
+        if touch.ud.get("show_buttons", False):
+            self.buttons_visible = True
         return super().on_touch_up(touch)
 
     def on_buttons_visible(self, instance, value):
