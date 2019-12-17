@@ -32,13 +32,8 @@
                 pos: self.pos
                 size: self.size
         ColouredButton:
-            text: "hide"
-            on_release: root.hide_buttons()
-        ColouredButton:
             text: "next camera"
             on_release: app.rotate_cameras()
-            size_hint_x: None
-            width: self.texture_size[0] + dp(20)
         ColourBlindnessSelectionButton:
             text: 'trichromacy'
             id: normal_button
@@ -46,16 +41,17 @@
             group: 'transformations'
             state: 'down'
             size_hint_x: None
-            width: self.texture_size[0] + dp(20)
+            width: deuteranopia_button.width
         ColourBlindnessSelectionButton:
             text: 'protanopia'
             on_press: shader_widget.transformation = ('protanopia' if self.state == 'down' else 'none')
             group: 'transformations'
             size_hint_x: None
-            width: self.texture_size[0] + dp(20)
+            width: deuteranopia_button.width
             has_red: False
         ColourBlindnessSelectionButton:
             text: 'deuteranopia'
+            id: deuteranopia_button
             on_press: shader_widget.transformation = ('deuteranopia' if self.state == 'down' else 'none')
             group: 'transformations'
             size_hint_x: None
@@ -66,11 +62,12 @@
             on_press: shader_widget.transformation = ('tritanopia' if self.state == 'down' else 'none')
             group: 'transformations'
             size_hint_x: None
-            width: self.texture_size[0] + dp(20)
+            width: deuteranopia_button.width
             has_blue: False
         ColouredButton:
             text: "hide"
             on_release: root.hide_buttons()
+    OpenCameraButton:
 
 <ColouredButton>:
     background_normal: style.button_normal_rgba
@@ -200,3 +197,13 @@
                 Line:
                     points: [self.x, self.top, self.right, self.top]
                     width: 1
+
+<OpenCameraButton>:
+    active: app.current_camera is None
+    text: "Press to open camera stream"
+    font_size: dp(23)
+    size_hint: None, None
+    size: self.texture_size[0] + dp(30), self.texture_size[1] + dp(30)
+    opacity: 0 if app.current_camera is not None else 1
+    on_release: app.attempt_stream_camera(app.cameras_to_use[0])
+    pos_hint: {"center_x": 0.5, "center_y": 0.5}

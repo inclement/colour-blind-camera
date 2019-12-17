@@ -1,6 +1,8 @@
 
 import time
 import logging
+from functools import partial
+from enum import Enum
 
 from kivy.app import App
 from kivy.animation import Animation
@@ -8,7 +10,7 @@ from kivy import platform
 from kivy.lang import Builder
 from kivy.event import EventDispatcher
 from kivy.properties import (
-    ObjectProperty, StringProperty, ListProperty, BooleanProperty, NumericProperty)
+    ObjectProperty, StringProperty, ListProperty, BooleanProperty, NumericProperty, OptionProperty)
 from kivy.graphics.texture import Texture
 from kivy.graphics import Fbo, Callback, Rectangle
 from kivy.clock import Clock
@@ -17,7 +19,7 @@ from kivy.uix.stencilview import StencilView
 from kivy.uix.floatlayout import FloatLayout
 
 from colourswidget import ColourShaderWidget
-from widgets import ColouredToggleButtonContainer
+from widgets import ColouredToggleButtonContainer, ColouredButton
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -25,8 +27,23 @@ handler = logging.StreamHandler()
 handler.setLevel(logging.DEBUG)
 logger.addHandler(handler)
 
-if platform == "android":
-    from camera2 import PyCameraInterface
+from camera2 import PyCameraInterface
+
+from android.permissions import request_permission, check_permission, Permission
+
+class PermissionRequestStates(Enum):
+    UNKNOWN = "UNKNOWN"
+    HAVE_PERMISSION = "HAVE_PERMISSION"
+    DO_NOT_HAVE_PERMISSION = "DO_NOT_HAVE_PERMISSION"
+    AWAITING_REQUEST_RESPONSE = "AWAITING_REQUEST_RESPONSE"
+
+class OpenCameraButton(ColouredButton):
+    active = BooleanProperty(False)
+    def on_touch_down(self, touch):
+        print("touch pos", touch.pos, self.collide_point(*touch.pos), self.active)
+        if not self.active:
+            return False
+        return super().on_touch_down(touch)
 
 class ColourBlindnessSelectionButton(ColouredToggleButtonContainer):
     has_red = BooleanProperty(True)
@@ -53,10 +70,9 @@ class RootLayout(FloatLayout):
         self.buttons_visible = True
 
     def on_touch_down(self, touch):
-        if self.ids.buttons_dropdown.collide_point(*touch.pos):
-            return self.ids.buttons_dropdown.on_touch_down(touch)
-
-        touch.ud["show_buttons"] = True
+        touch_consumed = super().on_touch_down(touch)
+        if not touch_consumed:
+            touch.ud["show_buttons"] = True
 
     def on_touch_up(self, touch):
         if touch.ud.get("show_buttons", False):
@@ -65,7 +81,7 @@ class RootLayout(FloatLayout):
 
     def on_buttons_visible(self, instance, value):
         Animation.cancel_all(self, "_buttons_visible_fraction")
-        Animation(_buttons_visible_fraction=value, duration=0.55, t="out_cubic").start(self)
+        Animation(_buttons_visible_fraction=value, duration=0.45, t="out_cubic").start(self)
 
 class CameraDisplayWidget(StencilView):
     texture = ObjectProperty(None, allownone=True)
@@ -147,6 +163,13 @@ class CameraApp(App):
 
     cameras_to_use = ListProperty()
 
+    camera_permission_state = OptionProperty(
+        PermissionRequestStates.UNKNOWN,
+        options=[PermissionRequestStates.UNKNOWN,
+                 PermissionRequestStates.HAVE_PERMISSION,
+                 PermissionRequestStates.DO_NOT_HAVE_PERMISSION,
+                 PermissionRequestStates.AWAITING_REQUEST_RESPONSE])
+
     def build(self):
         Builder.load_file("androidcamera.kv")
 
@@ -177,14 +200,19 @@ class CameraApp(App):
     def rotate_cameras(self):
         self.ensure_camera_closed()
         self.cameras_to_use = self.cameras_to_use[1:] + [self.cameras_to_use[0]]
-        self.stream_camera(self.cameras_to_use[0])
+        self.attempt_stream_camera(self.cameras_to_use[0])
 
     def restart_stream(self):
         self.ensure_camera_closed()
         Clock.schedule_once(self._restart_stream, 0)
 
     def _restart_stream(self, dt):
-        self.stream_camera(self.cameras_to_use[0])
+        logger.info("On restart, state is {}".format(self.camera_permission_state))
+        if self.camera_permission_state in (PermissionRequestStates.UNKNOWN, PermissionRequestStates.HAVE_PERMISSION):
+            self.attempt_stream_camera(self.cameras_to_use[0])
+        else:
+            logger.warning(
+                "Did not attempt to restart camera stream as state is {}".format(self.camera_permission_state))
 
     def debug_print_camera_info(self):
         cameras = self.camera_interface.cameras
@@ -194,7 +222,30 @@ class CameraApp(App):
                 camera.camera_id, camera.facing, camera.supported_resolutions))
 
     def stream_camera_index(self, index):
-        self.stream_camera(self.camera_interface.cameras[index])
+        self.attempt_stream_camera(self.camera_interface.cameras[index])
+
+    def attempt_stream_camera(self, camera):
+        """Start streaming from the given camera, if we have the CAMERA
+        permission, otherwise request the permission first.
+        """
+
+        if check_permission(Permission.CAMERA):
+            self.stream_camera(camera)
+        else:
+            self.camera_permission_state = PermissionRequestStates.AWAITING_REQUEST_RESPONSE
+            request_permission(Permission.CAMERA, partial(self._request_permission_callback, camera))
+
+    def _request_permission_callback(self, camera, permissions, alloweds):
+        # Assume  that we  received info  about exactly  1 permission,
+        # since we only ever ask for CAMERA
+        allowed = alloweds[0]
+
+        if allowed:
+            self.camera_permission_state = PermissionRequestStates.HAVE_PERMISSION
+            self.stream_camera(camera)
+        else:
+            self.camera_permission_state = PermissionRequestStates.DO_NOT_HAVE_PERMISSION
+            print("PERMISSION FORBIDDEN")
 
     def stream_camera(self, camera):
         resolution = (1920, 1080)

@@ -23,7 +23,7 @@ packages = find_packages()
 print('packages are', packages)
 
 setup(
-    name='camera2 test',
+    name='Colour blind simulator',
     version='0.1',
     description='camera',
     author='Alexander Taylor',
