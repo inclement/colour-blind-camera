@@ -182,17 +182,17 @@
             height: dp(15)
             canvas:
                 Color:
-                    rgba: (1, 0.36, 0.36, 1) if root.has_red else (1, 1, 1, 0)
+                    rgba: (1, 0.36, 0.36, 1) if root.has_red else (0.1, 0.1, 0.1, 1)
                 Rectangle:
                     pos: self.pos
                     size: self.width / 3., self.height
                 Color:
-                    rgba: (0.3, 1, 0.3, 1) if root.has_green else (1, 1, 1, 0)
+                    rgba: (0.3, 1, 0.3, 1) if root.has_green else (0.1, 0.1, 0.1, 1)
                 Rectangle:
                     pos: self.x + self.width / 3., self.y
                     size: self.width / 3., self.height
                 Color:
-                    rgba: (0.35, 0.45, 1, 1) if root.has_blue else (1, 1, 1, 0)
+                    rgba: (0.35, 0.45, 1, 1) if root.has_blue else (0.1, 0.1, 0.1, 1)
                 Rectangle:
                     pos: self.x + 2*self.width / 3., self.y
                     size: self.width / 3., self.height
@@ -203,7 +203,7 @@
                     width: 1
 
 <OpenCameraButton>:
-    active: app.current_camera is None
+    active: app.current_camera is None and app._camera_permission_state_string != "UNKNOWN"
     text: "Press to open camera stream"
     font_size: dp(23)
     size_hint: None, None

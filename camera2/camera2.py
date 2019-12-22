@@ -130,6 +130,8 @@ class PyCameraDevice(EventDispatcher):
     java_camera_device = ObjectProperty()
     java_stream_configuration_map = ObjectProperty()
 
+    _open_callback = ObjectProperty(None, allownone=True)
+
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.register_event_type("on_opened")
@@ -182,7 +184,8 @@ class PyCameraDevice(EventDispatcher):
     def __repr__(self):
         return str(self)
 
-    def open(self):
+    def open(self, callback=None):
+        self._open_callback = callback
         self.java_camera_manager.openCamera(
             self.camera_id,
             self._java_state_java_callback,
@@ -214,6 +217,9 @@ class PyCameraDevice(EventDispatcher):
             self.connected = False
         else:
             raise ValueError("Received unknown camera action {}".format(action))
+
+        if self._open_callback is not None:
+            self._open_callback(self, action)
 
     def start_preview(self, resolution):
         if self.java_camera_device is None:

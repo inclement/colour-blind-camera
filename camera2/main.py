@@ -17,6 +17,7 @@ from kivy.clock import Clock
 from kivy.uix.widget import Widget
 from kivy.uix.stencilview import StencilView
 from kivy.uix.floatlayout import FloatLayout
+from kivy.core.window import Window
 
 from colourswidget import ColourShaderWidget
 from widgets import ColouredToggleButtonContainer, ColouredButton
@@ -169,6 +170,10 @@ class CameraApp(App):
                  PermissionRequestStates.HAVE_PERMISSION,
                  PermissionRequestStates.DO_NOT_HAVE_PERMISSION,
                  PermissionRequestStates.AWAITING_REQUEST_RESPONSE])
+    _camera_permission_state_string = StringProperty("UNKNOWN")
+
+    def on_camera_permission_state(self, instance, state):
+        self._camera_permission_state_string = state.value
 
     def build(self):
         Builder.load_file("androidcamera.kv")
@@ -248,17 +253,47 @@ class CameraApp(App):
             print("PERMISSION FORBIDDEN")
 
     def stream_camera(self, camera):
-        resolution = (1920, 1080)
+        resolution = self.select_resolution(Window.size, camera.supported_resolutions, best=(1920, 1080))
+        if resolution is None:
+            logger.error(f"Found no good resolution in {camera.supported_resolutions} for Window.size {Window.size}")
+            return
+        else:
+            logger.info(f"Chose resolution {resolution} from choices {camera.supported_resolutions}")
         self.camera_resolution = resolution
-        camera.open()
-        time.sleep(0.5)
+        camera.open(callback=self._stream_camera_open_callback)
+
+    def _stream_camera_open_callback(self, camera, action):
+        if action == "OPENED":
+            logger.info("Camera opened, preparing to start preview")
+            Clock.schedule_once(partial(self._stream_camera_start_preview, camera), 0)
+        else:
+            logger.info("Ignoring camera event {action}")
+
+    def _stream_camera_start_preview(self, camera, *args):
+        logger.info("Starting preview of camera {camera}")
         if camera.facing == "FRONT":
             self.root.ids.cdw.correct_camera = True
         else:
             self.root.ids.cdw.correct_camera = False
-        self.texture = camera.start_preview(resolution)
+        self.texture = camera.start_preview(tuple(self.camera_resolution))
 
         self.current_camera = camera
+
+    def select_resolution(self, window_size, resolutions, best=None):
+        if best in resolutions:
+            return best
+
+        if not resolutions:
+            return None
+
+        win_x, win_y = window_size
+        larger_resolutions = [(x, y) for (x, y) in resolutions if (x > win_x and y > win_y)]
+
+        if larger_resolutions:
+            return min(larger_resolutions, key=lambda r: r[0] * r[1])
+
+        smaller_resolutions = resolutions  # if we didn't find one yet, all are smaller than the requested Window size
+        return max(smaller_resolutions, key=lambda r: r[0] * r[1])
 
     def on_texture(self, instance, value):
         print("App texture changed to {}".format(value))
