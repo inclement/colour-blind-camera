@@ -7,6 +7,7 @@ from kivy.clock import Clock
 from jnius import autoclass, cast, PythonJavaClass, java_method, JavaClass, MetaJavaClass, JavaMethod
 
 import logging
+from enum import Enum
 
 logger = logging.getLogger(__file__)
 logger.setLevel(logging.DEBUG)
@@ -44,6 +45,20 @@ CameraCaptureEvents = autoclass("net.inclem.camera2.MyCaptureSessionCallback$Cam
 
 _global_handler = Handler(Looper.getMainLooper())
 
+class LensFacing(Enum):
+    """Values copied from CameraCharacteristics api doc, as pyjnius
+    lookup doesn't work on some devices.
+    """
+    LENS_FACING_FRONT = 0
+    LENS_FACING_BACK = 1
+    LENS_FACING_EXTERNAL = 2
+
+class ControlAfMode(Enum):
+    CONTROL_AF_MODE_CONTINUOUS_PICTURE = 4
+
+class ControlAeMode(Enum):
+    CONTROL_AE_MODE_ON = 1
+
 class Runnable(PythonJavaClass):
     __javainterfaces__ = ['java/lang/Runnable']
 
@@ -75,20 +90,25 @@ class PyCameraInterface(EventDispatcher):
 
     def __init__(self):
         super().__init__()
+        logger.info("Starting camera interface init")
         self.java_camera_manager = cast("android.hardware.camera2.CameraManager",
                                     context.getSystemService(Context.CAMERA_SERVICE))
 
         self.camera_ids = self.java_camera_manager.getCameraIdList()
         characteristics_dict = self.java_camera_characteristics
         camera_manager = self.java_camera_manager
+        logger.info("Got basic java objects")
         for camera_id in self.camera_ids:
+            logger.info(f"Getting data for camera {camera_id}")
             characteristics_dict[camera_id] = camera_manager.getCameraCharacteristics(camera_id)
+            logger.info("Got characteristics dict")
 
             self.cameras.append(PyCameraDevice(
                 camera_id=camera_id,
                 java_camera_manager=camera_manager,
                 java_camera_characteristics=characteristics_dict[camera_id],
             ))
+            logger.info(f"Finished interpreting camera {camera_id}")
 
     def select_cameras(self, **conditions):
         options = self.cameras
@@ -161,23 +181,28 @@ class PyCameraDevice(EventDispatcher):
         self.java_camera_device.close()
 
     def _populate_camera_characteristics(self):
+        logger.info("Populating camera characteristics")
         self.java_stream_configuration_map = self.java_camera_characteristics.get(
             CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)
+        logger.info("Got stream configuration map")
 
         self.supported_resolutions = [
             (size.getWidth(), size.getHeight()) for size in
             self.java_stream_configuration_map.getOutputSizes(SurfaceTexture(0).getClass())]
+        logger.info("Got supported resolutions")
 
         facing = self.java_camera_characteristics.get(
             CameraCharacteristics.LENS_FACING)
-        if facing == CameraCharacteristics.LENS_FACING_BACK:
+        logger.info(f"Got facing: {facing}")
+        if facing == LensFacing.LENS_FACING_BACK.value:  # CameraCharacteristics.LENS_FACING_BACK:
             self.facing = "BACK"
-        elif facing == CameraCharacteristics.LENS_FACING_FRONT:
+        elif facing == LensFacing.LENS_FACING_FRONT.value:  # CameraCharacteristics.LENS_FACING_FRONT:
             self.facing = "FRONT"
-        elif facing == CameraCharacteristics.LENS_FACING_EXTERNAL:
+        elif facing == LensFacing.LENS_FACING_EXTERNAL.value:  # CameraCharacteristics.LENS_FACING_EXTERNAL:
             self.facing = "EXTERNAL"
         else:
             raise ValueError("Camera id {} LENS_FACING is unknown value {}".format(self.camera_id, facing))
+        logger.info(f"Finished initing camera {self.camera_id}")
 
     def __str__(self):
         return "<PyCameraDevice facing={}>".format(self.facing)
@@ -247,9 +272,9 @@ class PyCameraDevice(EventDispatcher):
         self.java_capture_request = self.java_camera_device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
         self.java_capture_request.addTarget(self.java_preview_surface)
         self.java_capture_request.set(
-            CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
+            CaptureRequest.CONTROL_AF_MODE, ControlAfMode.CONTROL_AF_MODE_CONTINUOUS_PICTURE.value)  # CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE)
         self.java_capture_request.set(
-            CaptureRequest.CONTROL_AE_MODE, CaptureRequest.CONTROL_AE_MODE_ON)
+            CaptureRequest.CONTROL_AE_MODE, ControlAeMode.CONTROL_AE_MODE_ON.value)  # CaptureRequest.CONTROL_AE_MODE_ON)
 
         self.java_surface_list = ArrayList()
         self.java_surface_list.add(self.java_preview_surface)

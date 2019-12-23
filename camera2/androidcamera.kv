@@ -203,7 +203,7 @@
                     width: 1
 
 <OpenCameraButton>:
-    active: app.current_camera is None and app._camera_permission_state_string != "UNKNOWN"
+    active: app.current_camera is None and app._camera_permission_state_string not in ("UNKNOWN", "AWAITING_REQUEST_RESPONSE")
     text: "Press to open camera stream"
     font_size: dp(23)
     size_hint: None, None
