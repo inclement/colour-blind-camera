@@ -1,0 +1,1 @@
+This app accesses the camera only to stream pixels directly to the screen. No information is collected by the app, or transmitted in any other way.
