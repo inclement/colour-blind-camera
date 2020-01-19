@@ -18,6 +18,7 @@ options = {'apk': {'debug': None,
                    'arch': 'arm64-v8a',
                    'add-source': 'java',
                    'icon': 'build_assets/logo.png',
+                   'presplash': 'build_assets/splash.png',
                    # 'window': None,
                    }}
 
@@ -26,7 +27,7 @@ print('packages are', packages)
 
 setup(
     name='ColourBlind',
-    version='0.2',
+    version='0.3',
     description='camera',
     author='Alexander Taylor',
     author_email='alexanderjohntaylor@gmail.com',
