@@ -1,11 +1,12 @@
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.floatlayout import FloatLayout
 from kivy.properties import (StringProperty, BooleanProperty, NumericProperty)
 from kivy.clock import Clock
 from kivy.graphics import RenderContext
 
 import shaders
 
-class ColourShaderWidget(BoxLayout):
+class ColourShaderWidget(FloatLayout):
     fs = StringProperty(None)
 
     transformation = StringProperty('none')

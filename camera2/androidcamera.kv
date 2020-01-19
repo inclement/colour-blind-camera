@@ -18,6 +18,13 @@
             id: cdw
             texture: app.texture
             resolution: app.camera_resolution
+            # Image:
+            #     id: im
+            #     source: "flower_garden.jpg"
+            #     on_texture: cdw.texture = self.texture
+            #     on_touch_down: self.reload()
+            #     on_touch_down: print("...", self.texture, cdw.texture)
+            #     opacity: 0
     BoxLayout:
         id: buttons_dropdown
         pos_hint: {}

@@ -102,6 +102,7 @@ class CameraDisplayWidget(StencilView):
             pos=self._update_rect,
             size=self._update_rect,
             resolution=self._update_rect,
+            texture=self._update_rect,
         )
 
     def on_correct_camera(self, instance, correct):
