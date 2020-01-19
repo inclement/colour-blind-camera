@@ -1,6 +1,6 @@
 # ColourBlind
 
-Android app for simulate colour blindness arising from the lack of red, green or blue light receptors.
+Android app for simulating colour blindness arising from the lack of red, green or blue light receptors.
 
 Get it at [Google Play](), or download the [latest release](https://github.com/inclement/colour-blind-camera/releases) directly.
 
@@ -17,4 +17,4 @@ Screenshot examples on Google Play use [this image](https://en.wikipedia.org/wik
 
 ## Technical details
 
-ColourBlind is written in Python using [Kivy](https://kivy.org/#home).
+ColourBlind is written in Python using [Kivy](https://kivy.org/#home). It was created as a technical investigation of accessing the Android [camera2 API](https://developer.android.com/reference/android/hardware/camera2/package-summary) from Python.
